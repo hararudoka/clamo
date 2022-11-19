@@ -1,0 +1,154 @@
+openapi: '3.0.2'
+info:
+  title: The Clamo Mmessanger API
+  version: '1.0'
+servers:
+  - url: http://localhost/
+paths:
+  /getUser?{id}: # allows to get information about user by id
+    get:
+      summary: Get user info by id
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /getMessage?{id}:
+    get:
+      summary: Get message by id, needs to be authenticated and be the sender or receiver 
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          description: Not Found
+  /sendMessage:
+    post:
+      summary: Send message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Message'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /register:
+    post:
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUser'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          description: Conflict
+        '500':
+          description: Internal Server Error
+  /login: # here we send login and password and get full user info
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUser'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+
+components:
+  schemas:
+    # bool of login
+    IsDataCorrect:
+      type: boolean
+    # body to login user
+    LoginUser:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+    # body for user
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        password:
+          type: string
+    # body for message
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+      required:
+        - id
