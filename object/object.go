@@ -1,5 +1,7 @@
 package object
 
+import "errors"
+
 // User will be used to store user information in DB and in JSON responses
 type User struct {
 	ID int `json:"id"` // unique id for user
@@ -17,3 +19,12 @@ type Message struct {
 
 	Text string `json:"text"` // content of the message
 }
+
+// List of errors that can be returned by something in this package
+var (
+	ErrNotFound         = errors.New("not found")
+	ErrMethodNotAllowed = errors.New("method not allowed")
+	ErrTakenUsername    = errors.New("username is already taken")
+	ErrIDNotSpecified   = errors.New("id is not specified")
+	ErrWrongID          = errors.New("wrong id")
+)
