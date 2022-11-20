@@ -8,7 +8,7 @@ CREATE TABLE "user" (
 );
 
 CREATE TABLE "message" (
-    id SERIAL PRIMARY KEY,
+    id uuid PRIMARY KEY,
     from_id INTEGER,
     to_id INTEGER,
     text TEXT
