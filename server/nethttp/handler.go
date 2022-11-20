@@ -30,25 +30,25 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// big conditional statement for routing
 	if r.Method == http.MethodGet {
 		if r.URL.Path == "/getUser" {
-			// h.GetUser(w, r)
+			h.GetUser(w, r)
 			return
 		}
 		if r.URL.Path == "/getMessage" {
-			// h.GetMessage(w, r)
+			h.GetMessage(w, r)
 			return
 		}
 		err = object.ErrNotFound
 	} else if r.Method == http.MethodPost {
-		if r.URL.Path == "/register" {
-			// h.Register(w, r)
+		if r.URL.Path == "/register" { // TODO: do not check auth here, but do it in all other routes 
+			h.Register(w, r)
+			return
+		}
+		if r.URL.Path == "/login" { // TODO: do not check auth here, but do it in all other routes 
+			h.Login(w, r)
 			return
 		}
 		if r.URL.Path == "/sendMessage" {
-			// h.SendMessage(w, r)
-			return
-		}
-		if r.URL.Path == "/login" {
-			// h.Login(w, r)
+			h.SendMessage(w, r)
 			return
 		}
 		err = object.ErrNotFound
@@ -88,4 +88,19 @@ func (h Handler) Error(w http.ResponseWriter, r *http.Request, err error) {
 	if err != nil {
 		log.Println("CRITICAL ERROR:", err, r.Method, r.URL.Path)
 	}
+}
+
+func (h Handler) GetUser(w http.ResponseWriter, r *http.Request) {
+}
+
+func (h Handler) GetMessage(w http.ResponseWriter, r *http.Request) {
+}
+
+func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
+}
+
+func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
+}
+
+func (h Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 }
