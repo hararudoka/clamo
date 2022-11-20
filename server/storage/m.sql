@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS "user";
 DROP TABLE IF EXISTS "message";
 
 CREATE TABLE "user" (
-    id SERIAL PRIMARY KEY,
+    id uuid PRIMARY KEY,
     username VARCHAR NOT NULL CONSTRAINT name_unique UNIQUE,
     password VARCHAR NOT NULL
 );
