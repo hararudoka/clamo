@@ -27,4 +27,5 @@ var (
 	ErrTakenUsername    = errors.New("username is already taken")
 	ErrIDNotSpecified   = errors.New("id is not specified")
 	ErrWrongID          = errors.New("wrong id")
+	ErrNotFoundUser     = errors.New("not found user")
 )
