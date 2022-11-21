@@ -42,11 +42,12 @@ func Open() (*DB, error) {
 
 // User -> save
 func (db *DB) SaveUser(user object.User) error {
-	row := db.QueryRow(context.Background(), "INSERT INTO \"user\" (username, password) VALUES ($1, $2) RETURNING id", user.Username, user.Password)
-	err := row.Scan(&user.ID)
-
+	_, err := db.Exec(context.Background(), "INSERT INTO \"user\" (id, username, password) VALUES ($1, $2, $3)", user.ID, user.Username, user.Password)
 	if isUniqueViolationErr(err) {
 		return object.ErrTakenUsername
+	}
+	if err != nil {
+		return err
 	}
 
 	return nil

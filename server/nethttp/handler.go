@@ -36,11 +36,11 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		err = object.ErrNotFound
 	} else if r.Method == http.MethodPost {
-		if r.URL.Path == "/register" { // TODO: do not check auth here, but do it in all other routes 
+		if r.URL.Path == "/register" { // TODO: do not check auth here, but do it in all other routes
 			h.Register(w, r)
 			return
 		}
-		if r.URL.Path == "/login" { // TODO: do not check auth here, but do it in all other routes 
+		if r.URL.Path == "/login" { // TODO: do not check auth here, but do it in all other routes
 			h.Login(w, r)
 			return
 		}
@@ -70,7 +70,7 @@ func (h Handler) Error(w http.ResponseWriter, r *http.Request, err error) {
 		statusCode = 404
 	case object.ErrTakenUsername:
 		statusCode = 409
-	case object.ErrIDNotSpecified, object.ErrWrongID:
+	case object.ErrUsernameNotSpecified, object.ErrWrongID, object.ErrPassNotSpecified, object.ErrDataNotSpecified:
 		statusCode = 400
 	}
 
@@ -98,6 +98,41 @@ func (h Handler) GetMessage(w http.ResponseWriter, r *http.Request) {
 
 // Register is a handler for POST /register, requests user's username and password, returns user's info in JSON
 func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
+	// get User from request
+	var user object.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		h.Error(w, r, err)
+		return
+	}
+
+	if user.Username == "" && user.Password == "" {
+		h.Error(w, r, object.ErrDataNotSpecified)
+		return
+	}
+	if user.Username == "" {
+		h.Error(w, r, object.ErrUsernameNotSpecified)
+		return
+	}
+	if user.Password == "" {
+		h.Error(w, r, object.ErrPassNotSpecified)
+		return
+	}
+
+	id, err := h.Service.SaveUser(user)
+	if err != nil {
+		h.Error(w, r, err)
+		return
+	}
+
+	user.ID = id
+	// write response
+	w.WriteHeader(200)
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		h.Error(w, r, err)
+		return
+	}
 }
 
 // Login is a handler for POST /login, requests user's username and password, returns user's info in JSON
@@ -107,3 +142,25 @@ func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
 // SendMessage is a handler for POST /sendMessage, requests a token, returns a message in JSON
 func (h Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 }
+
+// // base http requester
+// func (s Ha) request(method, route string, body []byte) ([]byte, error) {
+// 	req, err := http.NewRequest(method, DefaultApiURL+route, bytes.NewBuffer(body))
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	req.Header.Set("Authorization", "Bearer "+s.token)
+// 	req.Header.Set("Content-Type", "application/json")
+
+// 	fmt.Println(req.Body)
+// 	resp, err := s.client.Do(req)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer resp.Body.Close()
+
+// 	buf := new(bytes.Buffer)
+// 	buf.ReadFrom(resp.Body)
+
+// 	return buf.Bytes(), nil
+// }
