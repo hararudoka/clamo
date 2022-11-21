@@ -51,6 +51,7 @@ var (
 	ErrPassNotSpecified     = errors.New("password is not specified")
 	ErrDataNotSpecified     = errors.New("data is not specified")
 
-	ErrWrongID      = errors.New("wrong id")
-	ErrNotFoundUser = errors.New("not found user")
+	ErrWrongID        = errors.New("wrong id")
+	ErrNotFoundUser   = errors.New("not found user")
+	ErrNotImplemented = errors.New("not implemented")
 )

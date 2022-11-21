@@ -90,10 +90,12 @@ func (h Handler) Error(w http.ResponseWriter, r *http.Request, err error) {
 
 // GetUser is a handler for GET /getUser, requests user id, returns user's info in JSON
 func (h Handler) GetUser(w http.ResponseWriter, r *http.Request) {
+	h.Error(w, r, object.ErrNotImplemented)
 }
 
 // GetMessage is a handler for GET /getMessage, requests message id, returns message's info in JSON
 func (h Handler) GetMessage(w http.ResponseWriter, r *http.Request) {
+	h.Error(w, r, object.ErrNotImplemented)
 }
 
 // Register is a handler for POST /register, requests user's username and password, returns user's info in JSON
@@ -137,10 +139,12 @@ func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 // Login is a handler for POST /login, requests user's username and password, returns user's info in JSON
 func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
+	h.Error(w, r, object.ErrNotImplemented)
 }
 
 // SendMessage is a handler for POST /sendMessage, requests a token, returns a message in JSON
 func (h Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
+	h.Error(w, r, object.ErrNotImplemented)
 }
 
 // // base http requester
