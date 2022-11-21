@@ -2,7 +2,6 @@ package nethttp
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,12 +13,23 @@ import (
 
 // Mock of the DB
 type MockStore struct {
-	user    map[uuid.UUID]object.User
+	user    map[string]object.User
 	message map[uuid.UUID]object.Message
 }
 
+func newMock() *MockStore {
+	return &MockStore{
+		user:    make(map[string]object.User),
+		message: make(map[uuid.UUID]object.Message),
+	}
+}
+
 // User -> save
-func (ms MockStore) SaveUser(object.User) error {
+func (ms *MockStore) SaveUser(user object.User) error {
+	if _, ok := ms.user[user.Username]; ok {
+		return object.ErrTakenUsername
+	}
+	ms.user[user.Username] = user
 	return nil
 }
 
@@ -43,32 +53,32 @@ func (ms MockStore) CheckLogin(string, string) (object.User, error) {
 	return object.User{}, nil
 }
 
-// Main application test
-func TestHandler_ServeHTTP(t *testing.T) {
-	dbMock := MockStore{}
-	s := service.New(dbMock)
-	h := New(*s)
+// // Main application test
+// func TestHandler_ServeHTTP(t *testing.T) {
+// 	dbMock := MockStore{}
+// 	s := service.New(dbMock)
+// 	h := New(*s)
 
-	tests := []struct {
-		name   string
-		path   string
-		method string
-		status int
-	}{
-		{},
-	}
+// 	tests := []struct {
+// 		name   string
+// 		path   string
+// 		method string
+// 		status int
+// 	}{
+// 		{},
+// 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// test condition
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			// test condition
 
-			_ = h
-		})
-	}
-}
+// 			_ = h
+// 		})
+// 	}
+// }
 
 func TestGetUser(t *testing.T) {
-	dbMock := MockStore{}
+	dbMock := newMock()
 	s := service.New(dbMock)
 	h := New(*s)
 
@@ -102,14 +112,9 @@ func TestGetUser(t *testing.T) {
 				Username: "aboba",
 				Password: "1",
 			},
-			expected: object.User{
-				ID:       mustUUID(),
-				Username: "aboba",
-				Password: "1",
-			},
 			path:   "/register",
 			method: http.MethodPost,
-			status: http.StatusOK,
+			status: http.StatusConflict,
 		},
 		{
 			name: "Create Empty User",
@@ -140,12 +145,6 @@ func TestGetUser(t *testing.T) {
 			// r+w -> request
 			handler.ServeHTTP(w, r)
 
-			// check status code
-			if status := w.Code; status != tt.status {
-				t.Errorf("handler returned wrong status code: got '%v' want '%v'",
-					status, tt.status)
-			}
-
 			// w.Body to object.User
 			var user object.User
 			err = user.FromJSON(w.Body.Bytes())
@@ -153,13 +152,15 @@ func TestGetUser(t *testing.T) {
 				t.Fatal(string(w.Body.Bytes()), err)
 			}
 
-			u, err := s.SaveUser(user)
-			if err != nil {
-				t.Fatal(err)
-			}
+			u, _ := s.SaveUser(user)
+
 			user.ID = u
 
-			log.Println(tt.err)
+			// check status code
+			if status := w.Code; status != tt.status {
+				t.Errorf("handler returned wrong status code: got '%v' want '%v'",
+					status, tt.status)
+			}
 
 			// check response body, uuid.ID is random, so we can't check it, but we can check is it empty
 			if (user.Password != tt.expected.Password || user.Username != tt.expected.Username || user.ID == uuid.UUID{}) && tt.err == nil {
