@@ -2,10 +2,14 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/hararudoka/clamo/object"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -34,4 +38,69 @@ func Open() (*DB, error) {
 
 	// defer conn.Close(context.Background())
 	return &DB{conn}, nil
+}
+
+// User -> save
+func (db *DB) SaveUser(user object.User) error {
+	_, err := db.Exec(context.Background(), "INSERT INTO \"user\" (id, username, password) VALUES ($1, $2, $3)", user.ID, user.Username, user.Password)
+	if isUniqueViolationErr(err) {
+		return object.ErrTakenUsername
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Message -> save
+func (db *DB) SaveMessage(message object.Message) error {
+	_, err := db.GetUser(message.ToID)
+	if err != nil {
+		return object.ErrNotFoundUser
+	}
+	row := db.QueryRow(context.Background(), "INSERT INTO \"message\" (from_id, to_id, text) VALUES ($1, $2, $3) RETURNING id", message.FromID, message.ToID, message.Text)
+	err = row.Scan(&message.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// User.id -> User
+func (db *DB) GetUser(id int) (object.User, error) {
+	var user object.User
+	err := db.QueryRow(context.Background(), "SELECT * FROM \"user\" WHERE id = $1", id).Scan(&user.ID, &user.Username, &user.Password)
+	return user, err
+}
+
+// Message.id -> Message
+func (db *DB) GetMessage(id int) (object.Message, error) {
+	var message object.Message
+
+	err := db.QueryRow(context.Background(), "SELECT * FROM \"message\" WHERE id = $1", id).Scan(&message.ID, &message.FromID, &message.Text)
+	return message, err
+}
+
+// Username+Password -> User
+func (db *DB) CheckLogin(username, password string) (object.User, error) {
+	var user object.User
+
+	err := db.QueryRow(context.Background(), "SELECT * FROM \"user\" WHERE username = $1 AND password = $2", username, password).Scan(&user.ID, &user.Username, &user.Password)
+	if err != nil {
+		return object.User{}, err
+	}
+
+	return user, nil
+}
+
+func isUniqueViolationErr(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == pgerrcode.UniqueViolation {
+			return true
+		}
+	}
+	return false
 }
