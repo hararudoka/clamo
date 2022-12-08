@@ -26,11 +26,11 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	// big conditional statement for routing
 	if r.Method == http.MethodGet {
-		if r.URL.Path == "/getUser" {
+		if r.URL.Path == "/user" {
 			h.GetUser(w, r)
 			return
 		}
-		if r.URL.Path == "/getMessage" {
+		if r.URL.Path == "/message" {
 			h.GetMessage(w, r)
 			return
 		}
@@ -44,8 +44,8 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.Login(w, r)
 			return
 		}
-		if r.URL.Path == "/sendMessage" {
-			h.SendMessage(w, r)
+		if r.URL.Path == "/message" {
+			h.PostMessage(w, r)
 			return
 		}
 		err = object.ErrNotFound
@@ -88,12 +88,12 @@ func (h Handler) Error(w http.ResponseWriter, r *http.Request, err error) {
 	}
 }
 
-// GetUser is a handler for GET /getUser, requests user id, returns user's info in JSON
+// GetUser is a handler for GET /user, requests user id, returns user's info in JSON
 func (h Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	h.Error(w, r, object.ErrNotImplemented)
 }
 
-// GetMessage is a handler for GET /getMessage, requests message id, returns message's info in JSON
+// GetMessage is a handler for GET /message, requests message id, returns message's info in JSON
 func (h Handler) GetMessage(w http.ResponseWriter, r *http.Request) {
 	h.Error(w, r, object.ErrNotImplemented)
 }
@@ -134,8 +134,8 @@ func (h Handler) Login(w http.ResponseWriter, r *http.Request) {
 	h.Error(w, r, object.ErrNotImplemented)
 }
 
-// SendMessage is a handler for POST /sendMessage, requests a token, returns a message in JSON
-func (h Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
+// PostMessage is a handler for POST /message, requests a token, returns a message in JSON
+func (h Handler) PostMessage(w http.ResponseWriter, r *http.Request) {
 	h.Error(w, r, object.ErrNotImplemented)
 }
 

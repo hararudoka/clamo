@@ -5,7 +5,7 @@ info:
 servers:
   - url: http://localhost/
 paths:
-  /getUser?{id}: # allows to get information about user by id
+  /user?{id}: # allows to get information about user by id
     get:
       summary: Get user info by id
       parameters:
@@ -32,7 +32,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal Server Error
-  /getMessage?{id}:
+  /message?{id}:
     get:
       summary: Get message by id, needs to be authenticated and be the sender or receiver 
       parameters:
@@ -55,7 +55,7 @@ paths:
                 $ref: '#/components/schemas/Message'
         '404':
           description: Not Found
-  /sendMessage:
+  /message:
     post:
       summary: Send message
       requestBody:
