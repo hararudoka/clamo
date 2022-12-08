@@ -70,7 +70,7 @@ func (h Handler) Error(w http.ResponseWriter, r *http.Request, err error) {
 		statusCode = 404
 	case object.ErrTakenUsername:
 		statusCode = 409
-	case object.ErrUsernameNotSpecified, object.ErrWrongID, object.ErrPassNotSpecified, object.ErrDataNotSpecified:
+	case object.ErrCredentialsNotSpecified, object.ErrWrongID:
 		statusCode = 400
 	}
 
@@ -108,16 +108,8 @@ func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Username == "" && user.Password == "" {
-		h.Error(w, r, object.ErrDataNotSpecified)
-		return
-	}
-	if user.Username == "" {
-		h.Error(w, r, object.ErrUsernameNotSpecified)
-		return
-	}
-	if user.Password == "" {
-		h.Error(w, r, object.ErrPassNotSpecified)
+	if user.Username == "" || user.Password == "" {
+		h.Error(w, r, object.ErrCredentialsNotSpecified)
 		return
 	}
 

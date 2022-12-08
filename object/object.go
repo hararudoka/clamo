@@ -47,9 +47,7 @@ var (
 	ErrMethodNotAllowed = errors.New("method not allowed")
 	ErrTakenUsername    = errors.New("username is already taken")
 
-	ErrUsernameNotSpecified = errors.New("username is not specified")
-	ErrPassNotSpecified     = errors.New("password is not specified")
-	ErrDataNotSpecified     = errors.New("data is not specified")
+	ErrCredentialsNotSpecified = errors.New("credentials is not specified")
 
 	ErrWrongID        = errors.New("wrong id")
 	ErrNotFoundUser   = errors.New("not found user")

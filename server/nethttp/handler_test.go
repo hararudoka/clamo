@@ -125,7 +125,7 @@ func TestGetUser(t *testing.T) {
 			status: http.StatusBadRequest,
 			path:   "/register",
 			method: http.MethodPost,
-			err:    object.ErrDataNotSpecified,
+			err:    object.ErrCredentialsNotSpecified,
 		},
 	}
 
