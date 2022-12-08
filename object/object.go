@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// User will be used to store user information in DB and in JSON responses
+// User is used to store user information in DB and for JSON responses
 type User struct {
 	ID uuid.UUID `json:"id"` // unique id for user
 
