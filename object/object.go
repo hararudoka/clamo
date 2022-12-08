@@ -25,11 +25,7 @@ func (u User) ToJSON() []byte {
 }
 
 func (u *User) FromJSON(data []byte) error {
-	err := json.Unmarshal(data, &u)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal(data, &u)
 }
 
 type Message struct {

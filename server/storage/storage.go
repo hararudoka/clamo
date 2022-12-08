@@ -46,11 +46,7 @@ func (db *DB) SaveUser(user object.User) error {
 	if isUniqueViolationErr(err) {
 		return object.ErrTakenUsername
 	}
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Message -> save
@@ -61,11 +57,7 @@ func (db *DB) SaveMessage(message object.Message) error {
 	}
 	row := db.QueryRow(context.Background(), "INSERT INTO \"message\" (from_id, to_id, text) VALUES ($1, $2, $3) RETURNING id", message.FromID, message.ToID, message.Text)
 	err = row.Scan(&message.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // User.id -> User
