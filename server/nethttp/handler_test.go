@@ -2,6 +2,7 @@ package nethttp
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -80,7 +81,7 @@ func (ms MockStore) CheckLogin(string, string) (object.User, error) {
 func TestGetUser(t *testing.T) {
 	dbMock := newMock()
 	s := service.New(dbMock)
-	h := New(*s)
+	h := New(s)
 
 	tests := []struct {
 		name     string
@@ -115,6 +116,7 @@ func TestGetUser(t *testing.T) {
 			path:   "/register",
 			method: http.MethodPost,
 			status: http.StatusConflict,
+			err:    errors.New(object.ErrTakenUsername.Error()),
 		},
 		{
 			name: "Create Empty User",
@@ -125,47 +127,62 @@ func TestGetUser(t *testing.T) {
 			status: http.StatusBadRequest,
 			path:   "/register",
 			method: http.MethodPost,
-			err:    object.ErrCredentialsNotSpecified,
+			err:    errors.New(object.ErrCredentialsNotSpecified.Error()),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reader := bytes.NewReader(tt.input.ToJSON())
-
 			// reader -> r
 			r, err := http.NewRequest(tt.method, tt.path, reader)
 			if err != nil {
 				t.Fatal(err)
 			}
-
 			w := httptest.NewRecorder()
 			handler := http.HandlerFunc(h.ServeHTTP)
 
 			// r+w -> request
 			handler.ServeHTTP(w, r)
 
-			// w.Body to object.User
-			var user object.User
-			err = user.FromJSON(w.Body.Bytes())
-			if err != nil {
-				t.Fatal(string(w.Body.Bytes()), err)
+			status := w.Code
+
+			// TODO: fix error condition.
+			var actualError string
+			if status != http.StatusOK {
+				actualError = string(w.Body.Bytes())
 			}
 
-			u, _ := s.SaveUser(user)
+			// w.Body to object.User
+			var user object.User
+			if actualError == "" {
+				err = user.FromJSON(w.Body.Bytes())
+				if err != nil {
+					t.Fatal(string(w.Body.Bytes()), err)
+				}
 
-			user.ID = u
+				u, _ := s.SaveUser(user)
+				user.ID = u
+			}
 
 			// check status code
-			if status := w.Code; status != tt.status {
-				t.Errorf("handler returned wrong status code: got '%v' want '%v'",
+			if status != tt.status {
+				t.Errorf("handler returned wrong status code:\n got '%v'\nwant '%v'",
 					status, tt.status)
 			}
 
-			// check response body, uuid.ID is random, so we can't check it, but we can check is it empty
-			if (user.Password != tt.expected.Password || user.Username != tt.expected.Username || user.ID == uuid.UUID{}) && tt.err == nil {
-				t.Errorf("handler returned unexpected body: got '%v' want '%v'",
-					user, tt.expected)
+			// check error
+			if tt.err != nil {
+				if tt.err.Error() != actualError {
+					t.Errorf("handler returned wrong error:\n got '%s'\nwant '%s'",
+						actualError, tt.err)
+				}
+			} else {
+				// check response body, uuid.ID is random, so we can't check it, but we can check is it empty
+				if (user.Password != tt.expected.Password || user.Username != tt.expected.Username || user.ID == uuid.UUID{}) {
+					t.Errorf("handler returned unexpected body:\n got '%v'\nwant '%v'",
+						user, tt.expected)
+				}
 			}
 		})
 	}

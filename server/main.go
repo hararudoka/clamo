@@ -12,11 +12,11 @@ import (
 func main() {
 	db, err := storage.Open()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	s := service.New(db)
-	h := nethttp.New(*s)
+	h := nethttp.New(s)
 
 	// run server
 	if err := http.ListenAndServe(":80", h); err != nil {

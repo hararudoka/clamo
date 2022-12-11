@@ -2,6 +2,7 @@ package nethttp
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -11,11 +12,11 @@ import (
 
 // Handler is a struct for http handlers, which contains Service
 type Handler struct {
-	service.Service
+	*service.Service
 }
 
 // New creates new Handler
-func New(s service.Service) http.Handler {
+func New(s *service.Service) http.Handler {
 	return Handler{
 		s,
 	}
@@ -58,31 +59,31 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Error is a handler for errors, returns error in JSON
+func statusFromError(err error) int {
+	switch err {
+	case nil:
+		return http.StatusOK
+	case object.ErrNotFound:
+		return http.StatusNotFound
+	case object.ErrTakenUsername:
+		return http.StatusConflict
+	case object.ErrCredentialsNotSpecified, object.ErrWrongID:
+		return http.StatusBadRequest
+	}
+	return http.StatusInternalServerError
+}
+
+// Error is a handler for errors, returns error in plain text
 func (h Handler) Error(w http.ResponseWriter, r *http.Request, err error) {
 	log.Println("usual error:", err, r.Method, r.URL.Path)
 
-	statusCode := 500
-
-	// error handling. TODO: think about how to implement this (LocalError{Code, GlobalError}????)
-	switch err {
-	case object.ErrNotFound:
-		statusCode = 404
-	case object.ErrTakenUsername:
-		statusCode = 409
-	case object.ErrCredentialsNotSpecified, object.ErrWrongID:
-		statusCode = 400
-	}
-
-	var resp struct {
-		Error string `json:"error"`
-	}
+	var resp string
 
 	// write error message to response
-	resp.Error = err.Error()
-	w.WriteHeader(statusCode)
+	resp = err.Error()
+	w.WriteHeader(statusFromError(err))
 
-	err = json.NewEncoder(w).Encode(resp)
+	_, err = fmt.Fprint(w, resp)
 	if err != nil {
 		log.Println("CRITICAL ERROR:", err, r.Method, r.URL.Path)
 	}
@@ -101,8 +102,11 @@ func (h Handler) GetMessage(w http.ResponseWriter, r *http.Request) {
 // Register is a handler for POST /register, requests user's username and password, returns user's info in JSON
 func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
 	// get User from request
-	var user object.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	var (
+		err  error
+		user object.User
+	)
+	err = json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		h.Error(w, r, err)
 		return
